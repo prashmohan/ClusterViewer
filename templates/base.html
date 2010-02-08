@@ -1,0 +1,31 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en"> 
+<head> 
+<title>{% block title %}LoCal Cluster Monitor{% endblock %}</title> 
+   <link href="/site_media/style.css" rel="stylesheet" type="text/css"/> <br>
+   {% block jsimports %}
+   {% endblock %}
+
+   <script>
+   {% block js %}
+   {% endblock %}
+   </script>
+
+</head> 
+<body> 
+<div class="main"> 
+<div id="root"> 
+    <a href="http://www.local.cs.berkeley.edu"><img src="/site_media/local-logo.png" style="float: left; vertical-align:text-top;"></a> Cluster Monitoring DashBoard
+</div> 
+<hr> 
+{% block contents %}
+{% endblock %}
+<hr> 
+<p class=bottom> 
+<a href="http://www.local.cs.berkeley.edu"><img src="/site_media/local-logo.png" style="float: left; padding: 10px;"></a> 
+App by <a href="http://www.cs.berkeley.edu/~prmohan">Prashanth Mohan</a>. <!-- Color scheme selected by Steven Dawson-Haggerty http://www.cs.berkeley.edu/~stevedh -->
+<br>
+</div> 
+</body> 
+</html>

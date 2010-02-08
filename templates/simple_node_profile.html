@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block jsimports %}
+<!--[if IE]><script language="javascript" type="text/javascript" src="../flot/excanvas.min.js"></script><![endif]--> 
+<script type="text/javascript" src="/site_media/flot/jquery.js"></script> 
+<script type="text/javascript" src="/site_media/flot/jquery.flot.js"></script>
+{% endblock %}
+
+{% block js %}
+$(function () {
+	var options = {
+        lines: { show: true },
+        points: { show: true },
+    };
+	$.plot($("#placeholder"), [{{ json_data|safe }}], { xaxis: { mode: "time" } });
+});
+
+{% endblock %}
+
+{% block contents %}
+
+<h1 class="big">{{ node.name }}</h1>
+<!-- Insert power usage graph here -->
+<!-- Insert cpu utilization graph here -->
+<div id='placeholder' style='width: 350px; height: 300px;'></div> 
+<!-- <div id='myDiv'> -->
+    
+<h1 class="small">Power status:</h1> On / Off
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block contents %}
+{% for cluster in clusters %}
+    <b>Cluster {{ cluster.name }}</b><br/>
+    Nodes: 
+    {% for node in cluster.get_nodes %}
+        <a href="/node/{{ node.id }}/">{{ node.name }}</a>&nbsp;&nbsp;
+    {% endfor %}
+    
+    <!-- Insert graph on cluster aggregate power usage -->
+    <!-- Insert graph on cluster utilization -->
+    <br /><br />
+{% endfor %}
+{% endblock %}

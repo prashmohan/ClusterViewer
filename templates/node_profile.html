@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block jsimports %}
+<!--[if IE]><script language="javascript" type="text/javascript" src="../flot/excanvas.min.js"></script><![endif]--> 
+<script type="text/javascript" src="flot/jquery.js"></script> 
+<script type="text/javascript" src="flot/jquery.flot.js"></script>
+{% endblock %}
+
+{% block js %}
+function drawGraph() {
+	var options = {
+        lines: { show: true },
+        points: { show: true },
+        xaxis: { tickDecimals: 0, tickSize: 1 }
+    };
+	$.plot($("#placeholder"), [d1], options);
+};
+ 
+/*
+ * Returns a new XMLHttpRequest object, or false if this browser
+ * doesn't support it
+ */
+function newXMLHttpRequest() {
+	var xmlreq = false;
+	if (window.XMLHttpRequest) {
+	// Create XMLHttpRequest object in non-Microsoft browsers
+	xmlreq = new XMLHttpRequest();
+	} else if (window.ActiveXObject) {
+		// Create XMLHttpRequest via MS ActiveX
+		try {
+		  // Try to create XMLHttpRequest in later versions of Internet Explorer
+		  xmlreq = new ActiveXObject("Msxml2.XMLHTTP");
+		} catch (e1) {
+		  // Failed to create required ActiveXObject
+		  try {
+			// Try version supported by older versions of Internet Explorer
+			xmlreq = new ActiveXObject("Microsoft.XMLHTTP");
+		  } catch (e2) {
+			// Unable to create an XMLHttpRequest with ActiveX
+		  }
+		}
+	}
+	return xmlreq;
+}
+ 
+var d1 = [];
+var pos=1;
+
+//var url="http://192.168.1.105/proxy.php?resource=http://192.168.1.105:8080/is4/streamtest";
+var url="../../proxy.php?resource=http://smote.cs.berkeley.edu:8080/is4/streamtest";
+$(function fetchData(){
+	
+	var xmlhttp = newXMLHttpRequest();
+	xmlhttp.onreadystatechange=function()
+	{
+		//alert("Status: " + xmlhttp.status + "\nReady State: " + xmlhttp.readyState + "\nResponse headers: " + xmlhttp.getAllResponseHeaders() + "\nResponseText: " + xmlhttp.responseText);
+		//alert("status: " + xmlhttp.status + "\nready: " + xmlhttp.readyState);
+		if(xmlhttp.status == 200){// && xmlhttp.readyState==4){
+			//alert(xmlhttp.responseText);
+			var jsonreq = eval('(' + xmlhttp.responseText + ')');
+			//document.getElementById('test').innerHTML=jsonreq.data;
+			var ni = document.getElementById('myDiv');
+			var newdiv = document.createElement('div');
+			var divName = 'myDiv' + pos;
+			newdiv.setAttribute('id', divName);
+			newdiv.innerHTML = pos + ". " + jsonreq.data;
+			ni.appendChild(newdiv);
+			
+			if (pos>50){
+				d1.shift();
+			}
+			
+			d1.push([pos, jsonreq.data]);
+			pos +=1;
+			drawGraph(d1);
+			fetchData();
+				
+		}
+	}	
+	
+ 
+	xmlhttp.open("GET",url,true);
+	xmlhttp.send(null);
+	//alert(i);
+ 
+	/*if(pos<50){
+		setTimeout(fetchData, 1000*10);
+	}*/
+	
+});
+{% endblock %}
+
+{% block contents %}
+
+<h1 class="big">{{ node.name }}</h1>
+<!-- Insert power usage graph here -->
+<!-- Insert cpu utilization graph here -->
+<div id='placeholder' style='width: 1400px; height: 150px;'></div> 
+<div id='myDiv'>
+    
+<h1 class="small">Power status:</h1> On / Odff
+{% endfor %}
+{% endblock %}
