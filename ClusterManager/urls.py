@@ -21,7 +21,7 @@ urlpatterns = patterns('',
     (r'^acme_mapping/json/$', 'ClusterManager.NodeProfileViewer.views.get_node_acme_mapping_json'),
     (r'^acme_mapping/xml/$', 'ClusterManager.NodeProfileViewer.views.get_node_acme_mapping_xml'),
 
-    (r'^power/(?P<node_id>\d+)/$', 'ClusterManager.NodeProfileViewer.views.get_node_power_usage'),
+    (r'^node/(?P<node_id>\d+)/$', 'ClusterManager.NodeProfileViewer.views.get_node_power_usage'),
     # Uncomment the next line to enable the admin:
     (r'^admin/', include(admin.site.urls)),
 )

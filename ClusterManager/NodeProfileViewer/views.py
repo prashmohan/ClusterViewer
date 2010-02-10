@@ -48,8 +48,9 @@ def get_node_power_usage(request, node_id):
     counter = 1
     for power in power_usage:
         t = time.mktime(power.ts.timetuple())
-        data.append([t, power.power_usage])
+        data.append([t*1000, power.power_usage])
         counter += 1
     ret_val['data'] = data
     
     return render_to_response('simple_node_profile.html', {'json_data': json.dumps(ret_val), 'node': node})
+    

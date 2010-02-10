@@ -1,14 +1,48 @@
 {% extends "base.html" %}
-{% block contents %}
-{% for cluster in clusters %}
-    <b>Cluster {{ cluster.name }}</b><br/>
-    Nodes: 
-    {% for node in cluster.get_nodes %}
-        <a href="/node/{{ node.id }}/">{{ node.name }}</a>&nbsp;&nbsp;
+{% block jsimports %}
+<!--[if IE]><script language="javascript" type="text/javascript" src="../flot/excanvas.min.js"></script><![endif]--> 
+<script type="text/javascript" src="/site_media/flot/jquery.js"></script> 
+<script type="text/javascript" src="/site_media/flot/jquery.flot.js"></script>
+{% endblock %}
+
+{% block js %}
+$(function () {
+	var options1 = {
+        lines: { show: true },
+        xaxis: { mode: "time", timeformat: "%h:%M:%S", ticks: 3 },
+        yaxis: { min: 0 },
+        legend: { position: "sw"}
+    };
+    var options2 = {
+        lines: { show: true },
+        xaxis: { mode: "time", timeformat: "%h:%M:%S", ticks: 3 },
+        yaxis: { min: 0, max:100 },
+        legend: { position: "ne"}
+    };
+	
+    {% for cluster, power_data, util_data in cluster_data %}
+	    $.plot($("#power{{ cluster.id }}"), [{{ power_data|safe }}], options1);
+        $.plot($("#util{{ cluster.id }}"), [{{ util_data|safe }}], options2);
     {% endfor %}
-    
-    <!-- Insert graph on cluster aggregate power usage -->
-    <!-- Insert graph on cluster utilization -->
-    <br /><br />
+});
+
+{% endblock %}
+
+{% block contents %}
+{% for cluster, data in cluster_data %}
+<h1 class="big">{{ cluster.name }}</h1>
+<table width="100%">
+    <tr>
+        <td width="50%">
+<div id='power{{ cluster.id }}' style='width: 325px; height: 400px;'></div>
+</td>
+<td width="50%">
+<div id='util{{ cluster.id }}' style='width: 325px; height: 400px;'></div>
+</td></tr></table>
+<br/><br/>
+<h1 class="small">Nodes: </h1>
+    {% for node in cluster.get_nodes %}
+        <a href="/node/{{ node.id }}/">{{ node.name }}</a> 
+    {% endfor %}
 {% endfor %}
 {% endblock %}

@@ -5,6 +5,10 @@ import os
 import logging
 import traceback
 import sys
+import MySQLdb
+import subprocess
+import datetime
+import time
 
 from Gmetad.gmetad_plugin import GmetadPlugin
 from Gmetad.gmetad_config import getConfig, GmetadConfig
@@ -16,6 +20,14 @@ def get_plugin():
     #  in the configuration file.
     return MySQLLogger('mysqllogger')
 
+def get_node_id():
+    """Get node ID"""
+    # Hack! FIXME!
+    proc = subprocess.Popen('/bin/hostname', stdout=subprocess.PIPE)
+    proc.wait()
+    host_name = proc.stdout.read().strip()
+    return host_name[4:] # Gets worse and worse! Works only for Atom nodes
+    
 class MySQLLogger(GmetadPlugin):
     ''' This class implements the RRD plugin that stores metric data to RRD files.'''
     
@@ -24,19 +36,14 @@ class MySQLLogger(GmetadPlugin):
             # The call to the parent class __init__ must be last
             GmetadPlugin.__init__(self, cfgid)
             logging.debug ("Starting cluster state server")
+            self.conn = MySQLdb.connect(host='169.229.51.2', user='user', passwd='powerprofilecs262b', db='loclu')
+            self.node_id = get_node_id()
+            self.stmt_start = "INSERT INTO NodeProfileViewer_utilization (node_id"
         except:
             print "Error in init"
             traceback.print_exc(file=sys.stdout)
             raise
-            
-        print 'Finished init'
-        
-    # def _parseConfig(self, cfgdata):
-    #     '''This method overrides the plugin base class method.  It is used to
-    #         parse the plugin specific configuration directives.'''
-    #     for kw,args in cfgdata:
-    #         if self.kwHandlers.has_key(kw):
-    #             self.kwHandlers[kw](args)
+
 
     def start(self):
         '''Called by the engine during initialization to get the plugin going.'''
@@ -52,21 +59,35 @@ class MySQLLogger(GmetadPlugin):
         
     def _populateState(self, clusterNode):
         # clusterState [clusterName] [hostName] [metricName] = [val, sum, num]
-        print "Cluster: ", str(clusterNode.getAttr('name'))
+        logging.debug("Cluster: " + str(clusterNode.getAttr('name')))
+        vals = self.node_id
+        stmt = self.stmt_start
         
         for hostNode in clusterNode:
             hostName = str(hostNode.getAttr('name'))
-            print '------------------------------------'
-            print hostName
-
-            print "Last Reported: ", int(hostNode.getAttr('reported'))
-            print "IP: ", str(hostNode.getAttr('ip'))
-            print dir(hostNode)
             # Update metrics for each host
             for metricNode in hostNode:
                 metricName = str(metricNode.getAttr('name'))
-                print metricName, str(metricNode.getAttr('val'))
-            print ''
+                # print metricName, str(metricNode.getAttr('val'))
+                if metricName == 'cpu_idle':
+                    stmt += ", cpu_util"
+                    vals += ", " + str(100 - float(str(metricNode.getAttr('val'))))
+                elif metricName == 'mem_free':
+                    stmt += ", mem"
+                    vals += ", " + str(metricNode.getAttr('val'))
+                elif metricName == 'proc_total':
+                    stmt += ", proc_total"
+                    vals += ", " + str(metricNode.getAttr('val'))
+                elif metricName == 'load_one':
+                    stmt += ", cpu_load"
+                    vals += ", " + str(metricNode.getAttr('val'))
+        stmt += ", ts) VALUES ("
+        vals += ", '" + datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + "')"
+        stmt += vals
+        print stmt
+        cursor = self.conn.cursor()
+        cursor.execute(stmt)
+        cursor.close()
                 
                 
 if __name__ == '__main__':

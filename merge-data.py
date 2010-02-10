@@ -53,7 +53,6 @@ class DevReader(Thread):
 class ValPoster(Thread):
     def run(self):
         """Post values in the queue into the MySQL database"""
-        conn = MySQLdb.connect(host='local.cs.berkeley.edu', user='acme', passwd='410soda', db='loclu')
         while True:
             item = DATA_QUEUE.get()
             cursor = conn.cursor()
