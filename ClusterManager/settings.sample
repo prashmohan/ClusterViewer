@@ -21,7 +21,7 @@ DATABASE_PORT = ''             # Set to empty string for default. Not used with 
 # although not all choices may be available on all operating systems.
 # If running in a Windows environment this must be set to the same as your
 # system time zone.
-TIME_ZONE = 'America/Los Angeles'
+TIME_ZONE = 'America/Los_Angeles'
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
@@ -48,7 +48,7 @@ MEDIA_URL = ''
 ADMIN_MEDIA_PREFIX = '/media/'
 
 # Make this unique, and don't share it with anybody.
-SECRET_KEY = 'z8#%krs@z@sg3_30(7^g3!mcz5(vogk(g!0&=%+b@au5gx+ccw'
+SECRET_KEY = '' # No sharing. Put a key here
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
@@ -66,6 +66,7 @@ MIDDLEWARE_CLASSES = (
 ROOT_URLCONF = 'ClusterManager.urls'
 
 TEMPLATE_DIRS = (
+	# '../ClusterViewer/templates', # Make this absolute path
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
@@ -79,5 +80,4 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'ClusterManager.NodeProfileViewer',
     'ClusterManager.ClusterProfileViewer',
-    'ClusterManager.UtilizationViewer',
 )
