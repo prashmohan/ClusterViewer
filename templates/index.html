@@ -42,7 +42,7 @@ $(function () {
 <br/><br/>
 <h1 class="small">Nodes: </h1>
     {% for node in cluster.get_nodes %}
-        <a href="/node/{{ node.id }}/">{{ node.name }}</a> 
+        <a href="/node/{{ node.node_id }}/">{{ node.name }}</a> 
     {% endfor %}
 {% endfor %}
 {% endblock %}

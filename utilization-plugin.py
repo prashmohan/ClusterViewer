@@ -20,13 +20,16 @@ def get_plugin():
     #  in the configuration file.
     return MySQLLogger('mysqllogger')
 
+def extract_id(host_name):
+    return host_name[4:] # Gets worse and worse! Works only for Atom nodes
+    
 def get_node_id():
     """Get node ID"""
     # Hack! FIXME!
     proc = subprocess.Popen('/bin/hostname', stdout=subprocess.PIPE)
     proc.wait()
     host_name = proc.stdout.read().strip()
-    return host_name[4:] # Gets worse and worse! Works only for Atom nodes
+    return extract_id(host_name)
     
 class MySQLLogger(GmetadPlugin):
     ''' This class implements the RRD plugin that stores metric data to RRD files.'''
@@ -36,7 +39,7 @@ class MySQLLogger(GmetadPlugin):
             # The call to the parent class __init__ must be last
             GmetadPlugin.__init__(self, cfgid)
             logging.debug ("Starting cluster state server")
-            self.conn = MySQLdb.connect(host='169.229.51.2', user='user', passwd='powerprofilecs262b', db='loclu')
+            self.conn = MySQLdb.connect(host='169.229.51.2', user='user', passwd='powerprofilecs262b', db='loclu', unix_socket='/var/run/mysqld/mysqld.sock')
             self.node_id = get_node_id()
             self.stmt_start = "INSERT INTO NodeProfileViewer_utilization (node_id"
         except:
@@ -60,11 +63,13 @@ class MySQLLogger(GmetadPlugin):
     def _populateState(self, clusterNode):
         # clusterState [clusterName] [hostName] [metricName] = [val, sum, num]
         logging.debug("Cluster: " + str(clusterNode.getAttr('name')))
-        vals = self.node_id
-        stmt = self.stmt_start
-        
+        cursor = self.conn.cursor()
+
         for hostNode in clusterNode:
+            stmt = self.stmt_start
             hostName = str(hostNode.getAttr('name'))
+            node_id = extract_id(hostName)
+            vals = node_id
             # Update metrics for each host
             for metricNode in hostNode:
                 metricName = str(metricNode.getAttr('name'))
@@ -81,12 +86,11 @@ class MySQLLogger(GmetadPlugin):
                 elif metricName == 'load_one':
                     stmt += ", cpu_load"
                     vals += ", " + str(metricNode.getAttr('val'))
-        stmt += ", ts) VALUES ("
-        vals += ", '" + datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + "')"
-        stmt += vals
-        print stmt
-        cursor = self.conn.cursor()
-        cursor.execute(stmt)
+            stmt += ", ts) VALUES ("
+            vals += ", '" + datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + "')"
+            stmt += vals
+            #logging.debug("Insert statement: " + stmt)
+            cursor.execute(stmt)
         cursor.close()
                 
                 

@@ -33,24 +33,20 @@ def get_node_acme_mapping_xml(request):
     return HttpResponse(ret_str)
 
 def get_node_profile(request, node_id):
-    pass
-    
-def get_node_power_usage(request, node_id):
     nodes = Node.objects.filter(node_id=node_id)
     if len(nodes) != 1:
         print 'Oh oh error.', nodes
     node = nodes[0]
-    
-    power_usage = node.get_power_usage()
-    ret_val = {}
-    ret_val['label'] = 'Power usage for ' + node.name
-    data = []
-    counter = 1
-    for power in power_usage:
-        t = time.mktime(power.ts.timetuple())
-        data.append([t*1000, power.power_usage])
-        counter += 1
-    ret_val['data'] = data
-    
-    return render_to_response('simple_node_profile.html', {'json_data': json.dumps(ret_val), 'node': node})
-    
+    power_usage = node.get_power_usage_json()
+    util = node.get_utilization_json()
+    return render_to_response('simple_node_profile.html', {'power_data': power_usage, 'util_data': util, 'node': node})
+
+        
+# def get_node_power_usage(request, node_id):
+#     nodes = Node.objects.filter(node_id=node_id)
+#     if len(nodes) != 1:
+#         print 'Oh oh error.', nodes
+#     node = nodes[0]
+#     
+#     return render_to_response('simple_node_profile.html', {'json_data': node.get_power_usage_json(), 'node': node})
+#     
