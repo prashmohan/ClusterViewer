@@ -13,6 +13,8 @@ DEVICES = ['serial@/dev/ttyUSB0:115200', 'serial@/dev/ttyUSB1:115200', 'serial@/
 # Possible central bottleneck. But given the data rate, this should not be an issue.
 DATA_QUEUE = Queue.Queue()
 
+RESTART = False
+
 def get_energy(input_line):
     """Extract energy from the output line of tos"""
     start_extract = input_line.find('[')
@@ -44,30 +46,41 @@ class DevReader(Thread):
         
     def run(self):
         """Retrieve values from the device"""
-        while True:
-            input_lines = self.am.read()
-            for input_line in input_lines.__str__().splitlines():
-                energy_tuple = get_energy(input_line)
-                DATA_QUEUE.put(energy_tuple)
+        while not RESTART:
+            try:
+                input_lines = self.am.read()
+                for input_line in input_lines.__str__().splitlines():
+                    energy_tuple = get_energy(input_line)
+                    DATA_QUEUE.put(energy_tuple)
+            except:
+                RESTART = True
+                raise
 
 class ValPoster(Thread):
     def run(self):
         """Post values in the queue into the MySQL database"""
-        while True:
-            item = DATA_QUEUE.get()
-            cursor = conn.cursor()
-            stmt = "INSERT INTO loclu_power VALUES(" + item[0] + ", " + str(item[1]) + ", NOW())"
-            cursor.execute(stmt)
-            cursor.close()
+        while not RESTART:
+            try:
+                item = DATA_QUEUE.get()
+                cursor = conn.cursor()
+                stmt = "INSERT INTO loclu_power VALUES(" + item[0] + ", " + str(item[1]) + ", NOW())"
+                cursor.execute(stmt)
+                cursor.close()
+            except:
+                RESTART = True
+                raise
 
 if __name__ == '__main__':
     # d = DevReader(DEVICES[0])
     # d.run()
-    threads = Queue.Queue()
-    for device in DEVICES:
-        thread = DevReader(device)
-        threads.put(thread)
+    while True:
+        threads = Queue.Queue()
+        for device in DEVICES:
+            thread = DevReader(device)
+            threads.put(thread)
+            thread.start()
+        thread = ValPoster()
         thread.start()
-    thread = ValPoster()
-    thread.start()
-    threads.get().join()
+        threads.append(thread)
+        for thread in threads:
+            thread.join()
