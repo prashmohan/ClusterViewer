@@ -14,6 +14,7 @@ UTIL_INTVL = 10
 POWER_INTVL = 2
 UTIL_TIMEOUT = 30
 POWER_TIMEOUT = 5
+CLUSTER_GRAPH_TIME_FRAME = 10 # in minutes
 
 def fill_data(ds, start, stop, intvl, fill_val, scale):
     for data in range(start, stop, intvl):
@@ -34,6 +35,9 @@ class Cluster(models.Model):
 
     def __unicode__(self):
         return "Cluster " + self.name
+        
+    def get_node_count(self):
+        return Node.objects.filter(cluster=self).count()
 
     def get_nodes(self):
         return Node.objects.filter(cluster=self)
@@ -41,7 +45,8 @@ class Cluster(models.Model):
     def get_power_usage(self):
         # SELECT SUM(power) from Utilization where node_id in (SELECT node_id from Nodes where cluster_id=10) GROUP BY timestamp/10
         nodes = self.get_nodes()
-        last_hour = datetime.timedelta(minutes=2) # last 1 hour
+        print nodes.count()
+        last_hour = datetime.timedelta(minutes=CLUSTER_GRAPH_TIME_FRAME) # last 1 hour
         last_time = datetime.datetime.now() - last_hour # time 1 hour before
         power = PowerUsage.objects.filter(node__in=nodes).filter(ts__gte=last_time).values('ts').annotate(Sum('power_usage')).order_by('ts')
         return power
@@ -49,15 +54,16 @@ class Cluster(models.Model):
 
     def get_utilization(self):
         nodes = self.get_nodes()
-        last_hour = datetime.timedelta(minutes=2) # last 1 hour
+        last_hour = datetime.timedelta(minutes=CLUSTER_GRAPH_TIME_FRAME) # last 1 hour
         last_time = datetime.datetime.now() - last_hour # time 1 hour before
         util = Utilization.objects.filter(node__in=nodes).filter(ts__gte=last_time).values('ts').annotate(Sum('cpu_util')).order_by('ts')
         return util
-                    
+
     def get_power_usage_json(self):
         cluster_power_usage = {}
         power_data = []
         prev_time = -1
+        
         for power in self.get_power_usage():
             t = conv_pst(time.mktime(power['ts'].timetuple()))
             if prev_time != -1 and (t - prev_time) > POWER_TIMEOUT:
@@ -76,11 +82,12 @@ class Cluster(models.Model):
         cluster_util = {}
         util_data = []
         prev_time = -1
+        node_count = self.get_node_count()
         for util in self.get_utilization():
             t = conv_pst(time.mktime(util['ts'].timetuple()))
             if prev_time != -1 and (t - prev_time) > UTIL_TIMEOUT:
                 fill_data(util_data, prev_time + 2, t, 2, 0, FLOT_SCALING_FACTOR)
-            util_data.append([t*FLOT_SCALING_FACTOR, util['cpu_util__sum']])
+            util_data.append([t*FLOT_SCALING_FACTOR, util['cpu_util__sum']/node_count])
             prev_time = t
         if prev_time != -1 and conv_pst(time.mktime(datetime.datetime.now().timetuple())) - prev_time > 20 * POWER_TIMEOUT: # 20* UTIL_TIMEOUT is too big to make sense
             fill_data(util_data, prev_time + 2, conv_pst(time.mktime(datetime.datetime.now().timetuple())) , 2, 0, FLOT_SCALING_FACTOR)
@@ -122,7 +129,7 @@ class Node(models.Model):
             print 'Error', acme
             return None
         acme = acme[0]
-        last_hour = datetime.timedelta(minutes=2) # last 1 hour
+        last_hour = datetime.timedelta(minutes=CLUSTER_GRAPH_TIME_FRAME) # last 1 hour
         last_time = datetime.datetime.now() - last_hour # time 1 hour before
         return PowerUsage.objects.filter(node=acme).filter(ts__gte=last_time).order_by('ts')
         
@@ -145,7 +152,7 @@ class Node(models.Model):
         return json.dumps(node_utilization)
         
     def get_utilization(self):
-        last_hour = datetime.timedelta(minutes=2) # last 1 hour
+        last_hour = datetime.timedelta(minutes=CLUSTER_GRAPH_TIME_FRAME) # last 1 hour
         last_time = datetime.datetime.now() - last_hour # time 1 hour before
         return Utilization.objects.filter(node=self).filter(ts__gte=last_time).order_by('ts')
         
