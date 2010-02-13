@@ -14,19 +14,7 @@ def index(request):
     clusters = Cluster.objects.all()
     ret_val = []
     for cluster in clusters:
-        final_power_data = ''
-        final_util_data = ''
-        counter = 1
-        for node in cluster.get_nodes():
-            if counter != 1:
-                final_power_data += ", "
-                final_util_data += ", "
-            counter += 1
-            
-            final_power_data += node.get_power_usage_json()
-            final_util_data += node.get_utilization_json()
-        
-        ret_val.append((cluster, final_power_data, final_util_data,))
+        ret_val.append((cluster, cluster.get_power_usage_json(), cluster.get_utilization_json(),))
     
     
     return render_to_response('index.html', {'cluster_data': ret_val})
