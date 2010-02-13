@@ -7,20 +7,8 @@
 
 {% block js %}
 $(function () {
-	var options1 = {
-        lines: { show: true },
-        xaxis: { mode: "time", timeformat: "%h:%M:%S", ticks: 3 },
-        yaxis: { min: 0 },
-        legend: { position: "sw"}
-    };
-    var options2 = {
-        lines: { show: true },
-        xaxis: { mode: "time", timeformat: "%h:%M:%S", ticks: 3 },
-        yaxis: { min: 0, max:100 },
-        legend: { position: "ne"}
-    };
-	$.plot($("#placeholder1"), [{{ power_data|safe }}], options1);
-    $.plot($("#placeholder2"), [{{ util_data|safe }}], options2);
+	$.plot($("#placeholder1"), [{{ power_data|safe }}], optionsne);
+    $.plot($("#placeholder2"), [{{ util_data|safe }}], optionsne);
 });
 
 {% endblock %}

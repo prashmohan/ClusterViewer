@@ -1,31 +1,36 @@
 {% extends "base.html" %}
 {% block jsimports %}
 <!--[if IE]><script language="javascript" type="text/javascript" src="../flot/excanvas.min.js"></script><![endif]--> 
-<script type="text/javascript" src="/site_media/flot/jquery.js"></script> 
-<script type="text/javascript" src="/site_media/flot/jquery.flot.js"></script>
+<script language="javascript" type="text/javascript" src="/site_media/flot/jquery.js"></script> 
+<script language="javascript" type="text/javascript" src="/site_media/flot/jquery.flot.js"></script>
+<script language="javascript" type="text/javascript" src="/site_media/flot/jquery.flot.selection.js"></script>
 {% endblock %}
 
 {% block js %}
-$(function () {
-	var options1 = {
-        lines: { show: true },
-        xaxis: { mode: "time", timeformat: "%h:%M:%S", ticks: 3 },
-        yaxis: { min: 0 },
-        legend: { position: "sw"}
-    };
-    var options2 = {
-        lines: { show: true },
-        xaxis: { mode: "time", timeformat: "%h:%M:%S", ticks: 3 },
-        yaxis: { min: 0, max:100 },
-        legend: { position: "ne"}
-    };
-	
     {% for cluster, power_data, util_data in cluster_data %}
-	    $.plot($("#power{{ cluster.id }}"), [{{ power_data|safe }}], options1);
-        $.plot($("#util{{ cluster.id }}"), [{{ util_data|safe }}], options2);
+        
+        var pow_data = {{ power_data|safe }};
+        var pow_plot{{ cluster.id }} = $.plot($("#power{{ cluster.id }}"), [pow_data], optionssw);
+        var util_plot{{ cluster.id }} = $.plot($("#util{{ cluster.id }}"), [{{ util_data|safe }} ], optionsne);
+        $("#power{{ cluster.id }}").bind("plotselected", function (event, ranges) {
+                // do the zooming
+                pow_plot{{ cluster.id }} = $.plot($("#power{{ cluster.id }}"), [pow_data],
+                              $.extend(true, {}, optionssw, {
+                                  xaxis: { min: ranges.xaxis.from, max: ranges.xaxis.to }
+                              }));
+                util_plot{{ cluster.id }} = $.plot($("#util{{ cluster.id }}"), [{{ util_data|safe }}],
+                            $.extend(true, {}, optionsne, {
+                                xaxis: { min: ranges.xaxis.from, max: ranges.xaxis.to }
+                            }));
+            });
+            
+            
+                    
     {% endfor %}
-});
-
+    
+    
+  
+    
 {% endblock %}
 
 {% block contents %}

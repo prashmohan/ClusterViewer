@@ -3,13 +3,35 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en"> 
 <head> 
 <title>{% block title %}LoCal Cluster Monitor{% endblock %}</title> 
+<meta http-equiv="refresh" content="60">
    <link href="/site_media/style.css" rel="stylesheet" type="text/css"/> <br>
    {% block jsimports %}
    {% endblock %}
 
-   <script>
-   {% block js %}
-   {% endblock %}
+   <script id="source" language="javascript" type="text/javascript">   
+
+   $(function () {
+    	var optionssw = {
+            series: { lines: { show: true } },
+            xaxis: { mode: "time", timeformat: "%h:%M:%S", ticks: 3 },
+            yaxis: { min: 0 },
+            legend: { position: "sw"},
+            selection: { mode: "x" },
+        };
+        var optionsne = {
+           series: { lines: { show: true } },
+           xaxis: { mode: "time", timeformat: "%h:%M:%S", ticks: 3 },
+           yaxis: { min: 0, max:100 },
+           legend: { position: "ne"},
+           selection: { mode: "x" },
+        };
+        
+        {% block js %}
+        {% endblock %}
+
+        {% block js-flot-hover %}
+        {% endblock %}
+   });
    </script>
 
 </head> 
