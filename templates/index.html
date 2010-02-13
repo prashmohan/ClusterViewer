@@ -8,29 +8,22 @@
 
 {% block js %}
     {% for cluster, power_data, util_data in cluster_data %}
-        
         var pow_data = {{ power_data|safe }};
+        var util_data = {{ util_data|safe }};
         var pow_plot{{ cluster.id }} = $.plot($("#power{{ cluster.id }}"), [pow_data], optionssw);
-        var util_plot{{ cluster.id }} = $.plot($("#util{{ cluster.id }}"), [{{ util_data|safe }} ], optionsne);
+        var util_plot{{ cluster.id }} = $.plot($("#util{{ cluster.id }}"), [util_data], optionsne);
         $("#power{{ cluster.id }}").bind("plotselected", function (event, ranges) {
                 // do the zooming
                 pow_plot{{ cluster.id }} = $.plot($("#power{{ cluster.id }}"), [pow_data],
                               $.extend(true, {}, optionssw, {
                                   xaxis: { min: ranges.xaxis.from, max: ranges.xaxis.to }
                               }));
-                util_plot{{ cluster.id }} = $.plot($("#util{{ cluster.id }}"), [{{ util_data|safe }}],
+                util_plot{{ cluster.id }} = $.plot($("#util{{ cluster.id }}"), [util_data],
                             $.extend(true, {}, optionsne, {
                                 xaxis: { min: ranges.xaxis.from, max: ranges.xaxis.to }
                             }));
             });
-            
-            
-                    
     {% endfor %}
-    
-    
-  
-    
 {% endblock %}
 
 {% block contents %}
